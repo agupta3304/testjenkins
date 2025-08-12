@@ -2,41 +2,43 @@ pipeline {
     agent any
 
     environment {
-        VENV = 'venv'
+        DOCKER_IMAGE = "your-dockerhub-username/your-flask-app"
+        DOCKER_TAG = "latest"
     }
 
     stages {
-        stage('Checkout Git') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/agupta3304/testjenkins'
+                git branch: 'main', url: 'https://github.com/your-repo/your-flask-app.git'
             }
         }
 
-        stage('Set up Virtual Environment') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    bat "python -m venv %VENV%"
-                    bat "%VENV%\\Scripts\\python -m pip install --upgrade pip"
-                    bat "%VENV%\\Scripts\\pip install -r requirements.txt"
+                    sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
                 }
             }
         }
 
-        stage('Run the Tests') {
+        stage('Run Tests') {
             steps {
                 script {
-                    bat "%VENV%\\Scripts\\python -m unittest discover -s tests"
+                    // Run pytest inside container
+                    sh 'docker run --rm $DOCKER_IMAGE:$DOCKER_TAG pytest --maxfail=1 --disable-warnings -q --junitxml=report.xml'
+                }
+            }
+            post {
+                always {
+                    junit 'report.xml'
                 }
             }
         }
-    }
 
-    post {
-        success {
-            echo "Build & tests completed successfully."
-        }
-        failure {
-            echo "Build or tests failed."
-        }
-    }
-}
+        stage('Push to Docker Hub') {
+            when {
+                expression {
+                    // Push only if tests passed
+                    currentBuild.resultIsBetterOrEqualTo('SUCCESS')
+                }
+            }
