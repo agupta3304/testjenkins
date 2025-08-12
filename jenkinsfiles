@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Checkout Code') {
         steps {
-          git 'https://github.com/agupta3304/testjenkin'
+          git 'https://github.com/agupta3304/testjenkins'
         }
       }
     stage('Build') {
