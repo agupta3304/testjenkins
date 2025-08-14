@@ -35,13 +35,6 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') {
-            when {
-                expression {
-                    // Push only if tests passed
-                    currentBuild.resultIsBetterOrEqualTo('SUCCESS')
-                }
-            }
-}
+        
 }
 }
